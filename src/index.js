@@ -46,65 +46,43 @@ console.log("uniqCats", uniqCats);
 console.log("uniqTypes",uniqTypes);
 console.log("uniqSubs", uniqTypes);
 */
-// I need UNIQUE collections of: 1) hazard_cats, hazard_types, hazard_subs
-//  if item.harazd_cat === category 
-// {push to the object as name: item.hazard_cat}
-// if item.hazard_type === category && item.harazd_type
-//  { push to object as childrem [name: hazard_type loc:  ])}
-// if item-harazd === category && item_hazard_type ===type && item.hazard_sub === sub
- // { push to object as children [{name: hazard_type loc: } ]
 
-
-
-
- const dataAMW = uniqCats.map(item => {
+const dataAMW = uniqCats.map(item => {
   const result = {};
 
-  const createCats = (categoryLevel) => {
+  const createCats = (categoryLevel, myFunction) => {
     const all = []
     for (const value of Object.values(categoryLevel)){
-      const sumCats = filtered.filter(e => e.hazard_cat === value).reduce((accum, elem) => accum + elem.new_displacements || 0, 0);
+      const sumCats = filtered.filter(e => (myFunction(e)) === value).reduce((accum, elem) => accum + elem.new_displacements || 0, 0);
       /* if (result["name"] === result[value])*/
       result["name"] = item;
+      all.push(sumCats);
       if ((result["name"]) === value)
         {result["loc"] = sumCats;}
-      console.log("CATEGORIES:",value,sumCats)
-      all.push(sumCats);
-    }
-    return all;
+      if (categoryLevel === uniqCats)
+       { console.log("CATEGORIES:",value,sumCats)}
+     if (categoryLevel === uniqTypes)
+      { console.log("TYPES:",value,sumCats)}
+    if (categoryLevel === uniqSubs)
+      { console.log("SUBTYPES:",value,sumCats)}
   }
+  return all;
+}
 
-  createCats(uniqCats);
+createCats(uniqCats,(e => e.hazard_cat) );
+createCats(uniqTypes,(e => e.hazardType) );
+createCats(uniqSubs,(e => e.hazardSub) );
 
-
-  for (const value of Object.values(uniqTypes)){
-    const sumCats = filtered.filter(e => e.hazardType === value).reduce((accum, elem) => accum + elem.new_displacements || 0, 0);
-    /* if (result["name"] === result[value])*/
-    result["name"] = item;
-    if ((result["name"]) === value)
-      {result["loc"] = sumCats;}
-    console.log("TYPES:",value,sumCats)
-  }
-
-  for (const value of Object.values(uniqSubs)){
-    const sumCats = filtered.filter(e => e.hazardSub === value).reduce((accum, elem) => accum + elem.new_displacements || 0, 0);
-    /* if (result["name"] === result[value])*/
-    result["name"] = item;
-    if ((result["name"]) === value)
-      {result["loc"] = sumCats;}
-    console.log("SUBTYPES:",value,sumCats)
-  }
-
-  return result
+return result
 });
 
 
- const filterAndReduceByCat = (arrayofObjects, category) => arrayofObjects.filter(item => item.hazard_cat === category).map(v => v.new_displacements).reduce((accum, number) => accum + number);
- const sumGeophysical = filterAndReduceByCat(filtered, "Geophysical");
- const sumWeatherRelated = filterAndReduceByCat(filtered, "Weather related");
+const filterAndReduceByCat = (arrayofObjects, category) => arrayofObjects.filter(item => item.hazard_cat === category).map(v => v.new_displacements).reduce((accum, number) => accum + number);
+const sumGeophysical = filterAndReduceByCat(filtered, "Geophysical");
+const sumWeatherRelated = filterAndReduceByCat(filtered, "Weather related");
 
 
- const filterByHazardTypeAndReduce = (nameYourVariable, stringHazardType) => {
+const filterByHazardTypeAndReduce = (nameYourVariable, stringHazardType) => {
   return filtered.filter(item => item.hazardType === stringHazardType).map(v => v.new_displacements).reduce((accum, number) => accum + number);
 };
 
