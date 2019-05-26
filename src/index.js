@@ -2,12 +2,9 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { sum } from "lodash";
 import { MyResponsiveSunburst } from "./Sunburst";
-
 import "./styles.css";
-
 const catGeophysical = "Geophysical";
 const catWeatherRelated = "Weather related";
-
 const groupAndSum = (data, groupProperty, amountProperty) =>
 data.reduce((acc, curr) => {
   const group = curr[groupProperty];
@@ -15,7 +12,6 @@ data.reduce((acc, curr) => {
   acc[group] += curr[amountProperty];
   return acc;
 }, {});
-
 const prepareData = data => {
   const simplified = data.map(item => (
   {
@@ -25,91 +21,41 @@ const prepareData = data => {
     hazardType: item.hazard_type,
     hazardSub: item.hazard_sub_type
   }));
-
   // ask about specifications: for now incomplete records out && undefined hussle out (small part of data)
   const filtered = simplified.filter(item => item.hazard_cat && item.new_displacements && item.hazardType && item.new_displacements);
-
-  const getHazardCategory = (value) => {
-      // does two things: code flexible for API changes (will work after adding new hazard_categories) && prevents "undefined" hussle
-      return value === undefined ? "other" : value;
-    }
-
-    const uniqueArray = (myArray, myFunction) => {
-      return [...new Set(myArray.map(el => myFunction(el)))].sort((a, b) => a - b);
-    }
-
-    const uniqCats = uniqueArray(filtered, el => el.hazard_cat);
-    const uniqTypes = uniqueArray(filtered, el => el.hazardType);
-    const uniqSubs = uniqueArray(filtered, el => el.hazardSub);
-/*
-console.log("uniqCats", uniqCats);
-console.log("uniqTypes",uniqTypes);
-console.log("uniqSubs", uniqTypes);
-*/
-
-const dataAMW = uniqCats.map(item => {
-  const result = {};
-
-  const createCats = (categoryLevel, myFunction) => {
-    const all = []
-    for (const value of Object.values(categoryLevel)){
-      const sumCats = filtered.filter(e => (myFunction(e)) === value).reduce((accum, elem) => accum + elem.new_displacements || 0, 0);
-      /* if (result["name"] === result[value])*/
-      result["name"] = item;
-      all.push(sumCats);
-      if ((result["name"]) === value)
-        {result["loc"] = sumCats;}
-      if (categoryLevel === uniqCats)
-       { console.log("CATEGORIES:",value,sumCats)}
-     if (categoryLevel === uniqTypes)
-      { console.log("TYPES:",value,sumCats)}
-    if (categoryLevel === uniqSubs)
-      { console.log("SUBTYPES:",value,sumCats)}
+  const uniqueArray = (myArray, myFunction) => {
+    return [...new Set(myArray.map(el => myFunction(el)))].sort((a, b) => a - b);
   }
-  return all;
-}
-
-createCats(uniqCats,(e => e.hazard_cat) );
-createCats(uniqTypes,(e => e.hazardType) );
-createCats(uniqSubs,(e => e.hazardSub) );
-
-return result
-});
-
-
-const filterAndReduceByCat = (arrayofObjects, category) => arrayofObjects.filter(item => item.hazard_cat === category).map(v => v.new_displacements).reduce((accum, number) => accum + number);
-const sumGeophysical = filterAndReduceByCat(filtered, "Geophysical");
-const sumWeatherRelated = filterAndReduceByCat(filtered, "Weather related");
-
-
-const filterByHazardTypeAndReduce = (nameYourVariable, stringHazardType) => {
-  return filtered.filter(item => item.hazardType === stringHazardType).map(v => v.new_displacements).reduce((accum, number) => accum + number);
-};
-
-
-const graphData = filtered.map(item => {
+  const uniqCats = uniqueArray(filtered, el => el.hazard_cat);
+  const uniqTypes = uniqueArray(filtered, el => el.hazardType);
+  const uniqSubs = uniqueArray(filtered, el => el.hazardSub);
+  console.log("uniqCats", uniqCats);
 
   const result = {};
-
-  const createArray = (string) => {
-    const array = [{
-      "name": (string.toLowerCase()),
-      "loc": filterByHazardTypeAndReduce(string, (string.toString()))
-    }];
-    return array;
+  const dataAMW = uniqCats.map(item => {
+    const createCats = (categoryLevel, myFunction) => {
+     const obj = {};
+     for (let [value, key] of Object.entries(categoryLevel)){
+      value = filtered.filter(e => (myFunction(e)) === key).reduce((accum, elem) => accum + elem.new_displacements || 0, 0);
+      obj[key] = value;
+      /*      if (key === (result["name"])) value = result["loc"]*/
+    }
+    /*    console.log("OBJECT",obj);*/
+    return obj;
   }
-
-
-  result["name"] = item.hazard_cat;
-  result["children"] = createArray(item.hazardType);
+  const cats = createCats(uniqCats,(e => e.hazard_cat) );
+  console.log("CATS",cats);
+  const types = createCats(uniqTypes,(e => e.hazardType) );
+  const subs = createCats(uniqSubs,(e => e.hazardSub) );
+  Object.entries(cats).forEach(([key, value]) =>
+    result["name"] = key
+    result["loc"] = value
+    );
+  console.log("myresult",result)
   return result;
 });
 
-console.log("graphData",graphData)
 
-
-
-  // flood sum
   const flood = filtered
   .filter(item => item.hazardType === "Flood")
   .map(v => v.new_displacements);
@@ -150,9 +96,6 @@ console.log("graphData",graphData)
   .filter(item => item.hazardType === "Dry mass movement")
   .map(v => v.new_displacements);
   // summry
-
-
-
   let sumFlood = sum(flood);
   let sumExtremeTemp = sum(extremeTemp);
   let sumWetMass = sum(wetMass);
@@ -176,37 +119,28 @@ console.log("graphData",graphData)
   console.log("DryMass", sumDryMass);
   console.log("landslide", sumLandslide);
   console.log("other Storm", sumStorm - sumStormHTC);
-  console.log("sumGeophysical", sumGeophysical);
-  console.log("sumWeatherRelated",sumWeatherRelated);
-
+/*  console.log("sumGeophysical", sumGeophysical);
+console.log("sumWeatherRelated",sumWeatherRelated)*/;
   //console.log(dataGeophysical);
-
   // This is a simpler way of doing the above
   {
     /*const sums = groupAndSum(simplified, "hazard_cat", "new_displacements");
   const easierSumGeophysical = sums[catGeophysical];
   const easierSumWeatherRelated = sums[catWeatherRelated];*/
 }
-
   //console.log(easierSumGeophysical);
   //console.log(easierSumWeatherRelated);
-
   return {
     name: "nivo",
     children: [
     {name: "Geophysical",
     children: [ 
     {name: "1",loc: 69397},
-
     {name: "2", children: 
     [{name: "chart", loc: 55991},{name: "xAxis",loc: 86290},{name: "yAxis", loc: 13714 }]},
-
     {name: "3", children: 
     [{name: "chart", children: [{name: "pie", children: [{name: "outline",loc: 21858}, {name: "slices", loc: 52802}, {name: "bbox", loc: 118807}]},{name: "donut", loc: 152629}, {name: "gauge", loc: 97966}]}, {name: "legends", loc: 157098}]}]
   },
-
-
-
   {
     name: "Weather related",
     children: [
@@ -217,7 +151,6 @@ console.log("graphData",graphData)
     {
       name: "Storm",
       loc: sumStorm,
-
       children: [
       { name: "Storm, Tropical, Hurricane", 
       loc: sumStormHTC },
@@ -232,22 +165,18 @@ console.log("graphData",graphData)
   },
   {
     name: "Landslide, Avalanche",
-
     loc: sumLandslide
   },
   {
     name: "Dry mass movement",
-
     loc: sumDryMass
   },
   {
     name: "Wildfire",
-
     loc: sumWildfire
   },
   {
     name: "Drought",
-
     loc: sumDrought
   }
   ]
@@ -255,12 +184,10 @@ console.log("graphData",graphData)
 ]
 };
 };
-
 class App extends React.Component {
   state = {
     loading: true
   };
-
   componentDidMount() {
     fetch(
       "https://api.idmcdb.org/api/disaster_data?year=2017&ci=IDMCWSHSOLO009"
@@ -281,6 +208,5 @@ class App extends React.Component {
       );
   }
 }
-
 const rootElement = document.getElementById("root");
 ReactDOM.render(<App />, rootElement);
