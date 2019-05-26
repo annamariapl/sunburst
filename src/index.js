@@ -46,7 +46,17 @@ const prepareData = data => {
   const cats = createCats(uniqCats,(e => e.hazard_cat) );
   const types = createCats(uniqTypes,(e => e.hazardType) );
   const subs = createCats(uniqSubs,(e => e.hazardSub) );
-  Object.entries(cats).forEach(([key, value]) =>
+
+  const createObj = (category) => {
+    Object.entries(category).forEach(([key, value]) =>
+      result["name"] = key
+      result["children"] = Array.new
+    }
+
+    const obj1 = createObj(cats);
+    console.log(obj1);
+
+/*  Object.entries(cats).forEach(([key, value]) =>
     result["name"] = key,
     result["children"] = [
     Object.entries(types).forEach(([key, value]) =>
@@ -54,21 +64,18 @@ const prepareData = data => {
       result["children"] = [
       Object.entries(subs).forEach(([key, value]) =>
         result["name"] = key,
-        result["children"] = [
-        ],
-        )
-      ],
-      )
-    ],
+        result["children"] = [],
+        )],
+      )],
     );
   console.log("myresult",result)
-  return result;
+  return result;*/
 });
 
 
-  const flood = filtered
-  .filter(item => item.hazardType === "Flood")
-  .map(v => v.new_displacements);
+    const flood = filtered
+    .filter(item => item.hazardType === "Flood")
+    .map(v => v.new_displacements);
   //extreme temperature sum
   const extremeTemp = filtered
   .filter(item => item.hazardType === "Extreme temperature")
