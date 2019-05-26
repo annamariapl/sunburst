@@ -44,12 +44,22 @@ const prepareData = data => {
     return obj;
   }
   const cats = createCats(uniqCats,(e => e.hazard_cat) );
-  console.log("CATS",cats);
   const types = createCats(uniqTypes,(e => e.hazardType) );
   const subs = createCats(uniqSubs,(e => e.hazardSub) );
   Object.entries(cats).forEach(([key, value]) =>
-    result["name"] = key
-    result["loc"] = value
+    result["name"] = key,
+    result["children"] = [
+    Object.entries(types).forEach(([key, value]) =>
+      result["name"] = key,
+      result["children"] = [
+      Object.entries(subs).forEach(([key, value]) =>
+        result["name"] = key,
+        result["children"] = [
+        ],
+        )
+      ],
+      )
+    ],
     );
   console.log("myresult",result)
   return result;
