@@ -32,50 +32,45 @@ const prepareData = data => {
   console.log("uniqCats", uniqCats);
 
   const result = {};
-  const dataAMW = uniqCats.map(item => {
-    const createCats = (categoryLevel, myFunction) => {
-     const obj = {};
-     for (let [value, key] of Object.entries(categoryLevel)){
-      value = filtered.filter(e => (myFunction(e)) === key).reduce((accum, elem) => accum + elem.new_displacements || 0, 0);
-      obj[key] = value;
-      /*      if (key === (result["name"])) value = result["loc"]*/
-    }
-    /*    console.log("OBJECT",obj);*/
-    return obj;
+
+  const createCats = (categoryLevel, myFunction) => {
+   const obj = {};
+   for (let [value, key] of Object.entries(categoryLevel)){
+    value = filtered.filter(e => (myFunction(e)) === key).reduce((accum, elem) => accum + elem.new_displacements || 0, 0);
+    obj[key] = value;
+    /*      if (key === (result["name"])) value = result["loc"]*/
   }
-  const cats = createCats(uniqCats,(e => e.hazard_cat) );
-  const types = createCats(uniqTypes,(e => e.hazardType) );
-  const subs = createCats(uniqSubs,(e => e.hazardSub) );
+  /*    console.log("OBJECT",obj);*/
+  return obj;
+}
+const cats = createCats(uniqCats,(e => e.hazard_cat) );
+const types = createCats(uniqTypes,(e => e.hazardType) );
+const subs = createCats(uniqSubs,(e => e.hazardSub) );
 
-  const createObj = (category) => {
-    Object.entries(category).forEach(([key, value]) =>
-      result["name"] = key
-      result["children"] = Array.new
-    }
-
-    const obj1 = createObj(cats);
-    console.log(obj1);
-
-/*  Object.entries(cats).forEach(([key, value]) =>
-    result["name"] = key,
-    result["children"] = [
-    Object.entries(types).forEach(([key, value]) =>
-      result["name"] = key,
-      result["children"] = [
-      Object.entries(subs).forEach(([key, value]) =>
-        result["name"] = key,
-        result["children"] = [],
-        )],
-      )],
-    );
-  console.log("myresult",result)
-  return result;*/
-});
+function transformCategoryToSunburstObject(data, data2) {
+  return  Object.entries(data).map(([key, value]) => {
+   const result = {
+    name: key,
+    loc: value,
+  }
+  if(true) {
+    result.children=transformCategoryToSunburstObject(data2)
+  } else {
+    result.children=null
+  }
+  return result;
+})
+}
 
 
-    const flood = filtered
-    .filter(item => item.hazardType === "Flood")
-    .map(v => v.new_displacements);
+const test = transformCategoryToSunburstObject(cats, types)
+console.log("test",test);
+
+
+
+const flood = filtered
+.filter(item => item.hazardType === "Flood")
+.map(v => v.new_displacements);
   //extreme temperature sum
   const extremeTemp = filtered
   .filter(item => item.hazardType === "Extreme temperature")
