@@ -37,21 +37,24 @@ const prepareData = data => {
   const uniqCats = uniqueMappedArray(filtered, el => el.hazard_cat);
 
   console.log("uC",uniqCats);
-// New hash that is tracking Cat => subCats => types etc. 
-// Subcategories "know" to which category they belong
+
+// line 48 is making problems
 const uniqCatsSubCats = uniqCats.map(el => {
   const res = { hazard_cat: el,
     hazard_sub_cats: uniqueArray(filtered.filter(el2 => (el2.hazard_cat === el)).map(el3 => (
       { hazard_sub_cat: el3.hazard_sub_cat,
         hazard_types: uniqueArray(filtered.filter(el4 => (el4.hazard_sub_cat === el3.hazard_sub_cat)).map(el4 =>
-          ({ hazard_type: el4.hazard_type/*,
-            hazard_sub_types: uniqueArray(filtered.filter(el5 => (el5.hazard_type === el4.hazard_type))).map(el5 => ({hazard_sub_type: el5.hazard_sub_type}))*/
-          })))
+          ({ hazard_type: el4.hazard_type,
+            hazard_sub_types: uniqueArray(filtered.filter(el5 => (el5.hazard_type === el4.hazard_type))).map(el5 => ({hazard_sub_type: el5.hazard_sub_type})),
+          })
+          ))
       }
       )))
   }
   return res
 })
+
+
 console.log("uniCatsSubCats", uniqCatsSubCats);
 
 
