@@ -1,102 +1,118 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { sum } from "lodash";
-import {MyResponsiveSunburst} from "./Sunburst";
+import { MyResponsiveSunburst } from "./Sunburst";
 import "./styles.css";
-
-
+const catGeophysical = "Geophysical";
+const catWeatherRelated = "Weather related";
 const groupAndSum = (data, groupProperty, amountProperty) =>
 data.reduce((acc, curr) => {
   const group = curr[groupProperty];
   if (!acc[group]) acc[group] = 0;
   acc[group] += curr[amountProperty];
+
   return acc;
 }, {});
-
-
-
 const prepareData = data => {
   const simplified = data.map(item => (
-    {hazard_cat: item.hazard_category,
-      hazard_sub_cat: item.hazard_sub_category,
-      new_displacements: item.new_displacements,
-      hazard_type: item.hazard_type,
-      hazard_sub_type: item.hazard_sub_type,
-    }));
-
-  const filtered = simplified.filter(item => item.hazard_cat && item.new_displacements && item.hazard_type && item.new_displacements);
-
-  const uniqueArray = (myArray) => {
-    return [...new Set (myArray)].sort((a, b) => a - b);
+  {
+    hazard_cat: item.hazard_category,
+    new_displacements: item.new_displacements,
+    iso: item.iso,
+    hazardType: item.hazard_type,
+    hazardSub: item.hazard_sub_type
+  }));
+  // ask about specifications: for now incomplete records out && undefined hussle out (small part of data)
+  const filtered = simplified.filter(item => item.hazard_cat && item.new_displacements && item.hazardType && item.new_displacements);
+  const uniqueArray = (myArray, myFunction) => {
+    return [...new Set(myArray.map(el => myFunction(el)))].sort((a, b) => a - b);
   }
+  const uniqCats = uniqueArray(filtered, el => el.hazard_cat);
+  const uniqTypes = uniqueArray(filtered, el => el.hazardType);
+  const uniqSubs = uniqueArray(filtered, el => el.hazardSub);
 
-  const uniqueMappedArray = (myArray, myFunction) => {
-    return uniqueArray(myArray.map(el => myFunction(el)));
+  const result = {};
+
+  const createCats = (categoryLevel, myFunction) => {
+   const obj = {};
+   for (let [value, key] of Object.entries(categoryLevel)){
+    value = filtered.filter(e => (myFunction(e)) === key).reduce((accum, elem) => accum + elem.new_displacements || 0, 0);
+    obj[key] = value;
+    /*      if (key === (result["name"])) value = result["loc"]*/
   }
+  /*    console.log("OBJECT",obj);*/
+  return obj;
+}
+const cats = createCats(uniqCats,(e => e.hazard_cat) );
+const types = createCats(uniqTypes,(e => e.hazardType) );
+const subs = createCats(uniqSubs,(e => e.hazardSub) );
 
-  const uniqCats = uniqueMappedArray(filtered, el => el.hazard_cat);
-
-  console.log("uC",uniqCats);
-// New hash that is tracking Cat => subCats => types etc. 
-// Subcategories "know" to which category they belong
-const uniqCatsSubCats = uniqCats.map(el => {
-  const res = { hazard_cat: el,
-    hazard_sub_cats: uniqueArray(filtered.filter(el2 => (el2.hazard_cat === el)).map(el3 => (
-      { hazard_sub_cat: el3.hazard_sub_cat,
-        hazard_types: uniqueArray(filtered.filter(el4 => (el4.hazard_sub_cat === el3.hazard_sub_cat)).map(el4 =>
-          ({ hazard_type: el4.hazard_type/*,
-            hazard_sub_types: uniqueArray(filtered.filter(el5 => (el5.hazard_type === el4.hazard_type))).map(el5 => ({hazard_sub_type: el5.hazard_sub_type}))*/
-          })))
-      }
-      )))
-  }
-  return res
-})
-console.log("uniCatsSubCats", uniqCatsSubCats);
+console.log(types)
 
 
 
+
+
+function transformCategoryToSunburstObject(data) {
+  return  Object.entries(data).map(([key, value]) => {
+    const result = {
+      name: key,
+      loc: value,
+    }
+    if(value.children) {
+      result.children=transformCategoryToSunburstObject(types)
+    } else {
+      result.children=null
+    }
+    return result;
+  })
+}
+
+
+const test = transformCategoryToSunburstObject(cats);
+console.log("test",test);
 
 
 
 const flood = filtered
-.filter(item => item.hazard_type === "Flood")
+.filter(item => item.hazardType === "Flood")
 .map(v => v.new_displacements);
+console.log("cehck",flood);
   //extreme temperature sum
   const extremeTemp = filtered
-  .filter(item => item.hazard_type === "Extreme temperature")
+  .filter(item => item.hazardType === "Extreme temperature")
   .map(v => v.new_displacements);
   // wet mass sum
   const wetMass = filtered
-  .filter(item => item.hazard_type === "Wet mass movement")
+  .filter(item => item.hazardType === "Wet mass movement")
   .map(v => v.new_displacements);
   // wet mass sub type
   const landslide = filtered
-  .filter(item => item.hazard_sub_type === "Landslide, Avalanche")
+  .filter(item => item.hazardSub === "Landslide, Avalanche")
   .map(v => v.new_displacements);
   //storm sum
   const storm = filtered
-  .filter(item => item.hazard_type === "Storm")
+  .filter(item => item.hazardType === "Storm")
   .map(v => v.new_displacements);
   // storm sub type
   const stormHTC = filtered
-  .filter(item => item.hazard_sub_type === "Storm, Tropical, Hurricane")
+  .filter(item => item.hazardSub === "Storm, Tropical, Hurricane")
   .map(v => v.new_displacements);
   // tornado storm
   const tornado = filtered
-  .filter(item => item.hazard_sub_type === "Tornado")
+  .filter(item => item.hazardSub === "Tornado")
   .map(v => v.new_displacements);
   //wildFire sum
   const wildfire = filtered
-  .filter(item => item.hazard_type === "Wildfire")
+  .filter(item => item.hazardType === "Wildfire")
   .map(v => v.new_displacements);
   // Drought sum
   const drought = filtered
-  .filter(item => item.hazard_type === "Drought")
+  .filter(item => item.hazardType === "Drought")
   .map(v => v.new_displacements);
   //dry sum
   const dryMass = filtered
-  .filter(item => item.hazard_type === "Dry mass movement")
+  .filter(item => item.hazardType === "Dry mass movement")
   .map(v => v.new_displacements);
   // summry
   let sumFlood = sum(flood);
@@ -122,23 +138,27 @@ const flood = filtered
   console.log("DryMass", sumDryMass);
   console.log("landslide", sumLandslide);
   console.log("other Storm", sumStorm - sumStormHTC);
-
+/*  console.log("sumGeophysical", sumGeophysical);
+console.log("sumWeatherRelated",sumWeatherRelated)*/;
+  //console.log(dataGeophysical);
+  // This is a simpler way of doing the above
+  {
+    /*const sums = groupAndSum(simplified, "hazard_cat", "new_displacements");
+  const easierSumGeophysical = sums[catGeophysical];
+  const easierSumWeatherRelated = sums[catWeatherRelated];*/
+}
+  //console.log(easierSumGeophysical);
+  //console.log(easierSumWeatherRelated);
   return {
     name: "nivo",
     children: [
     {name: "Geophysical",
     children: [ 
     {name: "1",loc: 69397},
-    {name: "2", 
-    children: [
-    {name: "chart", loc: 55991},{name: "xAxis",loc: 86290},{name: "yAxis", loc: 13714 }]},
-    {name: "3", 
-    children:[
-    {name: "chart", 
-    children: [
-    {name: "pie", 
-    children: [
-    {name: "outline",loc: 21858}, {name: "slices", loc: 52802}, {name: "bbox", loc: 118807}]},{name: "donut", loc: 152629}, {name: "gauge", loc: 97966}]}, {name: "legends", loc: 157098}]}]
+    {name: "2", children: 
+    [{name: "chart", loc: 55991},{name: "xAxis",loc: 86290},{name: "yAxis", loc: 13714 }]},
+    {name: "3", children: 
+    [{name: "chart", children: [{name: "pie", children: [{name: "outline",loc: 21858}, {name: "slices", loc: 52802}, {name: "bbox", loc: 118807}]},{name: "donut", loc: 152629}, {name: "gauge", loc: 97966}]}, {name: "legends", loc: 157098}]}]
   },
   {
     name: "Weather related",
