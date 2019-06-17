@@ -24,25 +24,28 @@ const prepareData = data => {
 
     const filtered = simplified.filter(item => item.hazard_cat && item.hazard_sub_cat && item.new_displacements && item.hazard_type && item.hazard_sub_type);
 
+
     const uniqueArraySorted = (myArray) => {
         return [...new Set(myArray)].sort((a, b) => a - b);
     }
 
+    // the Array of Objects: key-value (not strings!)
     const uniqueMappedArray = (name, myArray) => {
         return uniqueArraySorted(myArray.map(el => el[name]));
     }
 
+    // more generic solution
     const layer_names = ["hazard_cat", "hazard_sub_cat", "hazard_type", "hazard_sub_type"];
     const createLayer = (elements, i) => {
-        const labels = uniqueMappedArray(layer_names[i], elements)
-        return labels.map(l => {
+        const labels = uniqueMappedArray(layer_names[i], elements);
+        return labels.map(label => {
             const layer = {
-                name: l,
+                name: label,
             }
             if (i < layer_names.length - 1) {
-                layer.children = createLayer(elements.filter(el => el[layer_names[i]] === l), i + 1)
+                layer.children = createLayer(elements.filter(el => el[layer_names[i]] === label), i + 1)
             } else {
-                // ad loc (numbers od displacements);
+                // ad loc (number od displacements), needed only on the last layer of sunburst graph (nivo sunbusrt sums up the previous ones automatically)
                 layer.loc = sum(elements.map(el => el.new_displacements));
             }
             return layer;
